@@ -1,5 +1,8 @@
 using EmployeeService.Api.Application;
+using EmployeeService.Api.Application.Employees.Commands;
 using EmployeeService.Api.DepartmentClient;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using EmployeeService.Api.Domain.Repositories;
@@ -23,7 +26,11 @@ builder.Host.UseSerilog();
 var cs = builder.Configuration.GetConnectionString("Default")!;
 builder.Services.AddDbContext<EmployeeDbContext>(opt => opt.UseSqlServer(cs));
 builder.Services.AddScoped<IEmployeeRepository, EfEmployeeRepository>();
-builder.Services.AddScoped<EmployeeAppService>();
+
+// MediatR & FluentValidation
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateEmployeeCommand>());
+builder.Services.AddValidatorsFromAssemblyContaining<CreateEmployeeValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // Resilient HttpClient to DepartmentService
 var deptBase = builder.Configuration["Services:DepartmentService"]!;
