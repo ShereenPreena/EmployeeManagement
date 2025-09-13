@@ -1,7 +1,10 @@
-using EmployeeService.Api.Data;
+using EmployeeService.Api.Application;
 using EmployeeService.Api.DepartmentClient;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using EmployeeService.Api.Domain.Repositories;
+using EmployeeService.Api.Infrastructure.Repositories;
+using EmployeeService.Api.Persistence;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -19,6 +22,8 @@ builder.Host.UseSerilog();
 // EF Core
 var cs = builder.Configuration.GetConnectionString("Default")!;
 builder.Services.AddDbContext<EmployeeDbContext>(opt => opt.UseSqlServer(cs));
+builder.Services.AddScoped<IEmployeeRepository, EfEmployeeRepository>();
+builder.Services.AddScoped<EmployeeAppService>();
 
 // Resilient HttpClient to DepartmentService
 var deptBase = builder.Configuration["Services:DepartmentService"]!;
