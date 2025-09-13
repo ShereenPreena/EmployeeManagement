@@ -1,7 +1,10 @@
 using DepartmentService.Api.Application;
+using DepartmentService.Api.Application.Departments.Commands;
 using DepartmentService.Api.Domain.Repositories;
 using DepartmentService.Api.Infrastructure.Repositories;
 using DepartmentService.Api.Persistence;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -18,7 +21,11 @@ builder.Host.UseSerilog();
 var cs = builder.Configuration.GetConnectionString("Default")!;
 builder.Services.AddDbContext<DepartmentDbContext>(opt => opt.UseSqlServer(cs));
 builder.Services.AddScoped<IDepartmentRepository, EfDepartmentRepository>();
-builder.Services.AddScoped<DepartmentAppService>();
+
+// MediatR & FluentValidation
+builder.Services.AddMediatR(typeof(CreateDepartmentCommand));
+builder.Services.AddValidatorsFromAssemblyContaining<CreateDepartmentValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
