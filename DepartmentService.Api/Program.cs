@@ -1,4 +1,7 @@
-using DepartmentService.Api.Data;
+using DepartmentService.Api.Application;
+using DepartmentService.Api.Domain.Repositories;
+using DepartmentService.Api.Infrastructure.Repositories;
+using DepartmentService.Api.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -14,6 +17,8 @@ builder.Host.UseSerilog();
 
 var cs = builder.Configuration.GetConnectionString("Default")!;
 builder.Services.AddDbContext<DepartmentDbContext>(opt => opt.UseSqlServer(cs));
+builder.Services.AddScoped<IDepartmentRepository, EfDepartmentRepository>();
+builder.Services.AddScoped<DepartmentAppService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

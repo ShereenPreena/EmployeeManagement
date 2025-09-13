@@ -1,8 +1,6 @@
-﻿using DepartmentService.Api.Data;
+﻿using DepartmentService.Api.Application;
 using DepartmentService.Api.Dto;
-using DepartmentService.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DepartmentService.Api.Controllers
 {
@@ -10,62 +8,43 @@ namespace DepartmentService.Api.Controllers
     [Route("api/[controller]")]
     public class DepartmentsController : ControllerBase
     {
-        private readonly DepartmentDbContext _db;
-        public DepartmentsController(DepartmentDbContext db) => _db = db;
+        private readonly DepartmentAppService _service;
+        public DepartmentsController(DepartmentAppService service) => _service = service;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Department>>> GetAll()
-            => Ok(await _db.Departments.AsNoTracking().ToListAsync());
+        public async Task<ActionResult<IEnumerable<DepartmentReadDto>>> GetAll(CancellationToken ct)
+            => Ok(await _service.GetAllAsync(ct));
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Department>> GetById(int id)
+        public async Task<ActionResult<DepartmentReadDto>> GetById(int id, CancellationToken ct)
         {
-            var d = await _db.Departments.FindAsync(id);
+            var d = await _service.GetByIdAsync(id, ct);
             return d is null ? NotFound() : Ok(d);
         }
 
         [HttpGet("by-name/{name}")]
-        public async Task<ActionResult<Department>> GetByName(string name)
+        public async Task<ActionResult<DepartmentReadDto>> GetByName(string name, CancellationToken ct)
         {
-            var d = await _db.Departments.FirstOrDefaultAsync(x => x.Name == name);
+            var d = await _service.GetByNameAsync(name, ct);
             return d is null ? NotFound() : Ok(d);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Department>> Create([FromBody] DepartmentCreateDto dto)
+        public async Task<ActionResult<DepartmentReadDto>> Create([FromBody] DepartmentCreateDto dto, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                return BadRequest("Name is required.");
-
-            var exists = await _db.Departments.AnyAsync(d => d.Name == dto.Name);
-            if (exists) return Conflict("Department name already exists.");
-
-            var entity = new Department { Name = dto.Name };
-            _db.Departments.Add(entity);
-            await _db.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
+            var created = await _service.CreateAsync(dto, ct);
+            return created is null
+                ? Conflict("Department name already exists.")
+                : CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Department dto)
-        {
-            var d = await _db.Departments.FindAsync(id);
-            if (d is null) return NotFound();
-            d.Name = dto.Name;
-            await _db.SaveChangesAsync();
-            return NoContent();
-        }
+        public async Task<IActionResult> Update(int id, [FromBody] DepartmentUpdateDto dto, CancellationToken ct)
+            => await _service.UpdateAsync(id, dto, ct) ? NoContent() : NotFound();
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var d = await _db.Departments.FindAsync(id);
-            if (d is null) return NotFound();
-            _db.Remove(d);
-            await _db.SaveChangesAsync();
-            return NoContent();
-        }
+        public async Task<IActionResult> Delete(int id, CancellationToken ct)
+            => await _service.DeleteAsync(id, ct) ? NoContent() : NotFound();
     }
 }
