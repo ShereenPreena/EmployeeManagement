@@ -28,7 +28,7 @@ builder.Services.AddDbContext<EmployeeDbContext>(opt => opt.UseSqlServer(cs));
 builder.Services.AddScoped<IEmployeeRepository, EfEmployeeRepository>();
 
 // MediatR & FluentValidation
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateEmployeeCommand>());
+builder.Services.AddMediatR(typeof(CreateEmployeeCommand));
 builder.Services.AddValidatorsFromAssemblyContaining<CreateEmployeeValidator>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 

@@ -23,7 +23,7 @@ builder.Services.AddDbContext<DepartmentDbContext>(opt => opt.UseSqlServer(cs));
 builder.Services.AddScoped<IDepartmentRepository, EfDepartmentRepository>();
 
 // MediatR & FluentValidation
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreateDepartmentCommand>());
+builder.Services.AddMediatR(typeof(CreateDepartmentCommand));
 builder.Services.AddValidatorsFromAssemblyContaining<CreateDepartmentValidator>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
